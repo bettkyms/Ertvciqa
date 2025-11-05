@@ -100,7 +100,7 @@ const ClassRepPortal: React.FC = () => {
             if (!session) continue;
             totalEntries++;
             
-            // Fix: The properties on the session object from the API response can be of type 'unknown'.
+            // FIX: The properties on the session object from the API response can be of type 'unknown'.
             // Safely convert them to strings to avoid type errors.
             const subject = String((session as any).subject ?? '');
             const trainer = String((session as any).trainer ?? '');
