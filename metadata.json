@@ -1,0 +1,5 @@
+{
+  "name": "Eldama Ravine TVC - IQA Tracker",
+  "description": "An application for trainers to mark trainee attendance and for class representatives to mark trainer attendance, automating the process for Institutional Quality Assurance (IQA).",
+  "requestFramePermissions": []
+}
