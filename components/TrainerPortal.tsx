@@ -31,7 +31,7 @@ const getDateRangeOfWeek = (weekStr: string): [Date, Date] => {
 
 
 const TrainerPortal: React.FC = () => {
-  const { currentUser, logout } = useContext(AuthContext);
+  const { currentUser, logout, updateUser } = useContext(AuthContext);
   const { classes, units, trainees, logo, addTraineeAttendance, traineeAttendanceRecords, unitAssignments } = useContext(DataContext);
 
   // State for taking attendance
@@ -52,6 +52,10 @@ const TrainerPortal: React.FC = () => {
   const [reportClassId, setReportClassId] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [reportError, setReportError] = useState('');
+
+  // State for Profile section
+  const [portfolioLink, setPortfolioLink] = useState(currentUser?.ePortfolioLink || '');
+  const [profileMessage, setProfileMessage] = useState('');
 
   const trainerClasses = useMemo(() => {
     if (!currentUser?.department) return [];
@@ -222,6 +226,15 @@ const TrainerPortal: React.FC = () => {
     setIsGenerating(false);
   };
 
+  const handleUpdatePortfolio = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (currentUser) {
+        updateUser(currentUser.id, { ePortfolioLink: portfolioLink });
+        setProfileMessage('E-Portfolio link updated successfully!');
+        setTimeout(() => setProfileMessage(''), 3000);
+    }
+  }
+
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -318,6 +331,31 @@ const TrainerPortal: React.FC = () => {
                 )}
               </>
             )}
+        </div>
+
+        {/* --- My Profile Section --- */}
+        <div className="border-t border-slate-200 pt-8">
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">My Profile</h2>
+            <p className="text-slate-500 mb-6">Manage your personal information.</p>
+            <form onSubmit={handleUpdatePortfolio} className="space-y-4 p-6 bg-slate-50 rounded-lg border border-slate-200">
+                <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">E-Portfolio Link</label>
+                    <input 
+                        type="url"
+                        value={portfolioLink}
+                        onChange={e => setPortfolioLink(e.target.value)}
+                        placeholder="https://your-portfolio.com"
+                        className="w-full p-2 border border-slate-300 rounded-md"
+                    />
+                </div>
+                {profileMessage && <p className="text-green-600 text-sm text-center">{profileMessage}</p>}
+                <button 
+                  type="submit"
+                  className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300"
+                >
+                    Save Link
+                </button>
+            </form>
         </div>
 
         {/* --- Generate Reports Section --- */}

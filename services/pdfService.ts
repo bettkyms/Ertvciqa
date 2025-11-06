@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Remark, WeeklyTraineeReportData, WeeklyTrainerReportData, Day, TimeSlot, SessionTraineeReportData, PeriodicTraineeReportData } from '../types';
+import { Remark, WeeklyTraineeReportData, WeeklyTrainerReportData, Day, TimeSlot, SessionTraineeReportData, PeriodicTraineeReportData, PercentageReportData } from '../types';
 
 /**
  * A helper function to draw HOD remarks on a PDF document.
@@ -23,14 +23,14 @@ const drawRemark = (doc: jsPDF, y: number, remark: Remark) => {
 
 /**
  * Generates and downloads a PDF report.
- * @param reportType The type of report to generate ('trainee', 'trainer', 'sessionTrainee', 'periodicTrainee').
+ * @param reportType The type of report to generate ('trainee', 'trainer', 'sessionTrainee', 'periodicTrainee', 'percentage').
  * @param reportData The structured data for the report.
  * @param hodRemark An optional remark from the Head of Department.
  * @param logo An optional base64 encoded logo image.
  */
 export const generatePdf = async (
-  reportType: 'trainee' | 'trainer' | 'sessionTrainee' | 'periodicTrainee',
-  reportData: WeeklyTraineeReportData | WeeklyTrainerReportData | SessionTraineeReportData | PeriodicTraineeReportData,
+  reportType: 'trainee' | 'trainer' | 'sessionTrainee' | 'periodicTrainee' | 'percentage',
+  reportData: WeeklyTraineeReportData | WeeklyTrainerReportData | SessionTraineeReportData | PeriodicTraineeReportData | PercentageReportData,
   hodRemark: Remark | undefined,
   logo: string | null
 ) => {
@@ -149,6 +149,40 @@ export const generatePdf = async (
         if (hodRemark) {
             drawRemark(doc, finalY, hodRemark);
         }
+    } else if (reportType === 'percentage') {
+        const data = reportData as PercentageReportData;
+
+        doc.setFontSize(18).setFont('helvetica', 'bold');
+        doc.text(data.title, 15, 20);
+
+        autoTable(doc, {
+            body: [['Period:', data.period]],
+            startY: 25,
+            theme: 'plain',
+            styles: { fontSize: 11 },
+        });
+
+        const finalY = (doc as any).lastAutoTable.finalY + 10;
+
+        autoTable(doc, {
+            head: [['Name', 'Present / Taught', 'Total Sessions', 'Attendance %']],
+            body: data.items.map(item => [
+                item.name,
+                item.presentCount,
+                item.totalSessions,
+                `${item.percentage.toFixed(1)}%`
+            ]),
+            startY: finalY,
+            headStyles: { fillColor: [41, 128, 185] }, // Blue
+        });
+
+        const summaryY = (doc as any).lastAutoTable.finalY + 10;
+        doc.setFontSize(12).setFont('helvetica', 'bold');
+        doc.text('Overall Summary', 15, summaryY);
+        doc.setFontSize(11).setFont('helvetica', 'normal');
+        doc.text(`Total Present/Taught: ${data.overall.present}`, 15, summaryY + 7);
+        doc.text(`Total Sessions: ${data.overall.total}`, 15, summaryY + 14);
+        doc.text(`Overall Percentage: ${data.overall.percentage.toFixed(1)}%`, 15, summaryY + 21);
 
     } else { // 'trainer' report
         const data = reportData as WeeklyTrainerReportData;
@@ -292,6 +326,8 @@ export const generatePdf = async (
     } else if (reportType === 'periodicTrainee') {
         const data = reportData as PeriodicTraineeReportData;
         fileName = `${data.className}_${data.period.replace(/ /g, '_')}_attendance.pdf`;
+    } else if (reportType === 'percentage') {
+        fileName = `${(reportData as PercentageReportData).title.replace(/ /g, '_')}_report.pdf`;
     }
     else {
         fileName = `trainee_report.pdf`;

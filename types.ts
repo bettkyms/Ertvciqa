@@ -12,12 +12,14 @@ export interface User {
   password?: string;
   role: Role;
   department?: string;
+  ePortfolioLink?: string;
 }
 
 export interface Trainer {
   id:string;
   name: string;
   department: string;
+  ePortfolioLink?: string;
 }
 
 export interface Trainee {
@@ -168,5 +170,25 @@ export interface WeeklyTrainerReportData {
   };
   dates: {
     [day: string]: string;
+  };
+}
+
+// For Aggregate Percentage Reports
+export interface PercentageReportItem {
+  id: string;
+  name: string;
+  presentCount: number;
+  totalSessions: number;
+  percentage: number;
+}
+
+export interface PercentageReportData {
+  title: string;
+  period: string;
+  items: PercentageReportItem[];
+  overall: {
+    present: number;
+    total: number;
+    percentage: number;
   };
 }

@@ -111,7 +111,7 @@ interface DataContextType {
   logo: string | null;
   setLogo: (logo: string | null) => void;
   addTrainer: (id: string, name: string, department: string) => void;
-  updateTrainer: (id: string, newName: string, newDepartment: string) => void;
+  updateTrainer: (id: string, updatedData: Partial<Omit<Trainer, 'id'>>) => void;
   deleteTrainer: (id: string) => void;
   addTrainee: (name: string, admissionNumber: string, classId: string) => boolean;
   addClass: (name: string, department: string) => boolean;
@@ -137,11 +137,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [logo, setLogo] = useState<string | null>(null);
 
   const addTrainer = (id: string, name: string, department: string) => {
-    setTrainers(prev => [...prev, { id, name, department }]);
+    setTrainers(prev => [...prev, { id, name, department, ePortfolioLink: '' }]);
   };
   
-  const updateTrainer = (id: string, newName: string, newDepartment: string) => {
-    setTrainers(prev => prev.map(t => t.id === id ? { ...t, name: newName, department: newDepartment } : t));
+  const updateTrainer = (id: string, updatedData: Partial<Omit<Trainer, 'id'>>) => {
+    setTrainers(prev => prev.map(t => t.id === id ? { ...t, ...updatedData } : t));
   };
 
   const deleteTrainer = (id: string) => {

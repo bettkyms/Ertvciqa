@@ -1,5 +1,5 @@
 import React, { createContext, useState, ReactNode, useContext } from 'react';
-import { User, Role } from '../types';
+import { User, Role, Trainer } from '../types';
 import { USERS } from '../constants';
 import { DataContext } from './DataContext';
 
@@ -70,11 +70,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const oldUser = updatedUsers[userIndex];
       const newUser = { ...oldUser, ...updatedData };
       updatedUsers[userIndex] = newUser;
+
+      // Update current user if they are the one being edited
+      if (currentUser?.id === userId) {
+        setCurrentUser(newUser);
+      }
       
       // Sync with trainers list if it's a trainer
       if (newUser.role === Role.Trainer) {
-        if (newUser.name !== oldUser.name || newUser.department !== oldUser.department) {
-          updateTrainer(userId, newUser.name, newUser.department!);
+        const trainerUpdates: Partial<Omit<Trainer, 'id'>> = {};
+        if (newUser.name !== oldUser.name) trainerUpdates.name = newUser.name;
+        if (newUser.department !== oldUser.department) trainerUpdates.department = newUser.department;
+        if (newUser.ePortfolioLink !== oldUser.ePortfolioLink) trainerUpdates.ePortfolioLink = newUser.ePortfolioLink;
+
+        if (Object.keys(trainerUpdates).length > 0) {
+            updateTrainer(userId, trainerUpdates);
         }
       }
       

@@ -1,19 +1,19 @@
 import { Class, Trainee, Trainer, User, Role, Unit, UnitAssignment } from './types';
 
 export const TRAINERS: Trainer[] = [
-  { id: 'trainer-1', name: 'Dr. Evelyn Reed', department: 'Computer Science' },
-  { id: 'trainer-2', name: 'Mr. Samuel Chen', department: 'Design' },
-  { id: 'trainer-3', name: 'Ms. Aisha Khan', department: 'Computer Science' },
+  { id: 'trainer-1', name: 'Dr. Evelyn Reed', department: 'Computer Science', ePortfolioLink: 'https://example.com/evelyn-reed' },
+  { id: 'trainer-2', name: 'Mr. Samuel Chen', department: 'Design', ePortfolioLink: '' },
+  { id: 'trainer-3', name: 'Ms. Aisha Khan', department: 'Computer Science', ePortfolioLink: '' },
   // New departments
-  { id: 'trainer-4', name: 'Mr. Ben Carter', department: 'Electrical Engineering' },
-  { id: 'trainer-5', name: 'Ms. Chloe Davis', department: 'Cosmetology' },
-  { id: 'trainer-6', name: 'Mr. David Evans', department: 'Mechanical Engineering' },
-  { id: 'trainer-7', name: 'Ms. Fiona Green', department: 'Hospitality Management' },
-  { id: 'trainer-8', name: 'Mr. George Hill', department: 'Fashion and Design' },
-  { id: 'trainer-9', name: 'Ms. Hannah Irwin', department: 'Business Studies' },
-  { id: 'trainer-10', name: 'Mr. Ian Jackson', department: 'Building & Civil Engineering' },
-  { id: 'trainer-11', name: 'Ms. Jane King', department: 'Automotive Engineering' },
-  { id: 'trainer-12', name: 'Mr. Kevin Lewis', department: 'Agricultural Engineering' },
+  { id: 'trainer-4', name: 'Mr. Ben Carter', department: 'Electrical Engineering', ePortfolioLink: '' },
+  { id: 'trainer-5', name: 'Ms. Chloe Davis', department: 'Cosmetology', ePortfolioLink: '' },
+  { id: 'trainer-6', name: 'Mr. David Evans', department: 'Mechanical Engineering', ePortfolioLink: '' },
+  { id: 'trainer-7', name: 'Ms. Fiona Green', department: 'Hospitality Management', ePortfolioLink: '' },
+  { id: 'trainer-8', name: 'Mr. George Hill', department: 'Fashion and Design', ePortfolioLink: '' },
+  { id: 'trainer-9', name: 'Ms. Hannah Irwin', department: 'Business Studies', ePortfolioLink: '' },
+  { id: 'trainer-10', name: 'Mr. Ian Jackson', department: 'Building & Civil Engineering', ePortfolioLink: '' },
+  { id: 'trainer-11', name: 'Ms. Jane King', department: 'Automotive Engineering', ePortfolioLink: '' },
+  { id: 'trainer-12', name: 'Mr. Kevin Lewis', department: 'Agricultural Engineering', ePortfolioLink: '' },
 ];
 
 export const TRAINEES: Trainee[] = [
@@ -55,9 +55,9 @@ export const USERS: User[] = [
   // Existing Users
   { id: 'user-iqa-1', name: 'Admin IQA', username: 'iqa', password: '123', role: Role.IQA },
   { id: 'user-hod-1', name: 'Dr. Charles Bing', username: 'hod1', password: '123', role: Role.HOD, department: 'Computer Science' },
-  { id: 'trainer-1', name: 'Dr. Evelyn Reed', username: 'trainer1', password: '123', role: Role.Trainer, department: 'Computer Science' },
-  { id: 'trainer-2', name: 'Mr. Samuel Chen', username: 'schen', password: '123', role: Role.Trainer, department: 'Design' },
-  { id: 'trainer-3', name: 'Ms. Aisha Khan', username: 'akhan', password: '123', role: Role.Trainer, department: 'Computer Science' },
+  { id: 'trainer-1', name: 'Dr. Evelyn Reed', username: 'trainer1', password: '123', role: Role.Trainer, department: 'Computer Science', ePortfolioLink: 'https://example.com/evelyn-reed' },
+  { id: 'trainer-2', name: 'Mr. Samuel Chen', username: 'schen', password: '123', role: Role.Trainer, department: 'Design', ePortfolioLink: '' },
+  { id: 'trainer-3', name: 'Ms. Aisha Khan', username: 'akhan', password: '123', role: Role.Trainer, department: 'Computer Science', ePortfolioLink: '' },
   { id: 'user-rep-1', name: 'Alex Ray', username: 'classrep1', password: '123', role: Role.ClassRep, department: 'Computer Science' },
   { id: 'user-rep-2', name: 'Brenda Miles', username: 'brep', password: '123', role: Role.ClassRep, department: 'Design' },
 
@@ -73,15 +73,15 @@ export const USERS: User[] = [
   { id: 'user-hod-10', name: 'Mr. Norman Borlaug', username: 'hod_age', password: '123', role: Role.HOD, department: 'Agricultural Engineering' },
   
   // New Trainers (as users)
-  { id: 'trainer-4', name: 'Mr. Ben Carter', username: 'bcarter', password: '123', role: Role.Trainer, department: 'Electrical Engineering' },
-  { id: 'trainer-5', name: 'Ms. Chloe Davis', username: 'cdavis', password: '123', role: Role.Trainer, department: 'Cosmetology' },
-  { id: 'trainer-6', name: 'Mr. David Evans', username: 'devans', password: '123', role: Role.Trainer, department: 'Mechanical Engineering' },
-  { id: 'trainer-7', name: 'Ms. Fiona Green', username: 'fgreen', password: '123', role: Role.Trainer, department: 'Hospitality Management' },
-  { id: 'trainer-8', name: 'Mr. George Hill', username: 'ghill', password: '123', role: Role.Trainer, department: 'Fashion and Design' },
-  { id: 'trainer-9', name: 'Ms. Hannah Irwin', username: 'hirwin', password: '123', role: Role.Trainer, department: 'Business Studies' },
-  { id: 'trainer-10', name: 'Mr. Ian Jackson', username: 'ijackson', password: '123', role: Role.Trainer, department: 'Building & Civil Engineering' },
-  { id: 'trainer-11', name: 'Ms. Jane King', username: 'jking', password: '123', role: Role.Trainer, department: 'Automotive Engineering' },
-  { id: 'trainer-12', name: 'Mr. Kevin Lewis', username: 'klewis', password: '123', role: Role.Trainer, department: 'Agricultural Engineering' },
+  { id: 'trainer-4', name: 'Mr. Ben Carter', username: 'bcarter', password: '123', role: Role.Trainer, department: 'Electrical Engineering', ePortfolioLink: '' },
+  { id: 'trainer-5', name: 'Ms. Chloe Davis', username: 'cdavis', password: '123', role: Role.Trainer, department: 'Cosmetology', ePortfolioLink: '' },
+  { id: 'trainer-6', name: 'Mr. David Evans', username: 'devans', password: '123', role: Role.Trainer, department: 'Mechanical Engineering', ePortfolioLink: '' },
+  { id: 'trainer-7', name: 'Ms. Fiona Green', username: 'fgreen', password: '123', role: Role.Trainer, department: 'Hospitality Management', ePortfolioLink: '' },
+  { id: 'trainer-8', name: 'Mr. George Hill', username: 'ghill', password: '123', role: Role.Trainer, department: 'Fashion and Design', ePortfolioLink: '' },
+  { id: 'trainer-9', name: 'Ms. Hannah Irwin', username: 'hirwin', password: '123', role: Role.Trainer, department: 'Business Studies', ePortfolioLink: '' },
+  { id: 'trainer-10', name: 'Mr. Ian Jackson', username: 'ijackson', password: '123', role: Role.Trainer, department: 'Building & Civil Engineering', ePortfolioLink: '' },
+  { id: 'trainer-11', name: 'Ms. Jane King', username: 'jking', password: '123', role: Role.Trainer, department: 'Automotive Engineering', ePortfolioLink: '' },
+  { id: 'trainer-12', name: 'Mr. Kevin Lewis', username: 'klewis', password: '123', role: Role.Trainer, department: 'Agricultural Engineering', ePortfolioLink: '' },
 
   // New Class Reps
   { id: 'user-rep-3', name: 'Charlie Day', username: 'crep_ee', password: '123', role: Role.ClassRep, department: 'Electrical Engineering' },

@@ -20,6 +20,7 @@ const UserManagement: React.FC = () => {
   const [editPassword, setEditPassword] = useState('');
   const [editRole, setEditRole] = useState<Role>(Role.Trainer);
   const [editDepartment, setEditDepartment] = useState('');
+  const [editEPortfolioLink, setEditEPortfolioLink] = useState('');
 
   // Set initial department for HOD
   useEffect(() => {
@@ -52,6 +53,7 @@ const UserManagement: React.FC = () => {
       password,
       role,
       department,
+      ePortfolioLink: '',
     });
     if (success) {
       setMessage(`User "${name}" created successfully!`);
@@ -74,6 +76,7 @@ const UserManagement: React.FC = () => {
     setEditPassword('');
     setEditRole(user.role);
     setEditDepartment(user.department || '');
+    setEditEPortfolioLink(user.ePortfolioLink || '');
     setIsModalOpen(true);
   };
   
@@ -90,6 +93,7 @@ const UserManagement: React.FC = () => {
       name: editName,
       role: editRole,
       department: editDepartment,
+      ePortfolioLink: editEPortfolioLink,
     };
     
     if (editPassword) {
@@ -142,6 +146,12 @@ const UserManagement: React.FC = () => {
               <option value={Role.ClassRep}>Class Rep</option>
             </select>
           </div>
+          {editRole === Role.Trainer && (
+            <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">E-Portfolio Link</label>
+                <input type="url" value={editEPortfolioLink} onChange={e => setEditEPortfolioLink(e.target.value)} placeholder="https://example.com/portfolio" className="w-full p-2 border border-slate-300 rounded-md" />
+            </div>
+          )}
           <div className="flex justify-end gap-4 pt-4">
             <button type="button" onClick={closeEditModal} className="px-4 py-2 bg-slate-200 text-slate-800 rounded-lg hover:bg-slate-300">Cancel</button>
             <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Save Changes</button>
@@ -211,7 +221,17 @@ const UserManagement: React.FC = () => {
                   <div className="mb-2 sm:mb-0 flex-grow">
                     <p className="font-medium text-slate-800">{user.name}</p>
                     <p className="text-xs text-slate-500">@{user.username} ({user.department})</p>
-                    <p className="text-sm text-slate-600 font-semibold mt-1">{user.role}</p>
+                    <div className="flex items-center mt-1">
+                        <p className="text-sm text-slate-600 font-semibold">{user.role}</p>
+                        {user.role === Role.Trainer && user.ePortfolioLink && (
+                            <>
+                                <span className="mx-2 text-slate-300">|</span>
+                                <a href={user.ePortfolioLink} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-blue-600 hover:underline">
+                                    Portfolio
+                                </a>
+                            </>
+                        )}
+                    </div>
                   </div>
                   <div className="flex gap-2 self-end sm:self-center flex-shrink-0">
                     <button onClick={() => openEditModal(user)} className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-100 px-3 py-1 rounded-md">Edit</button>
