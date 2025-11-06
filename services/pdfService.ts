@@ -160,48 +160,43 @@ export const generatePdf = async (
             try {
                 const imgProps = doc.getImageProperties(logo);
                 const aspectRatio = imgProps.width / imgProps.height;
-                const logoWidth = 20;
-                const logoHeight = logoWidth / aspectRatio;
-                doc.addImage(logo, 'PNG', 70, 10, logoWidth, logoHeight);
+                const logoHeight = 20;
+                const logoWidth = logoHeight * aspectRatio;
+                doc.addImage(logo, 'PNG', 15, 12, logoWidth, logoHeight); // Position at top-left
             } catch (error) {
                 console.error("Failed to add logo to PDF:", error);
             }
         }
         
-        doc.setFontSize(14).setFont('helvetica', 'bold');
-        doc.text('ELDAMA RAVINE TECHNICAL AND VOCATIONAL COLLEGE', pageWidth / 2, 18, { align: 'center' });
-        doc.setFontSize(11).setFont('helvetica', 'normal');
-        doc.text('CLASS ATTENDANCE QUALITY CONTROL FORM', pageWidth / 2, 24, { align: 'center' });
+        doc.setFontSize(16).setFont('helvetica', 'bold');
+        doc.text('ELDAMA RAVINE TECHNICAL AND VOCATIONAL COLLEGE', pageWidth / 2, 20, { align: 'center' });
+        doc.setFontSize(12).setFont('helvetica', 'normal');
+        doc.text('CLASS ATTENDANCE QUALITY CONTROL FORM', pageWidth / 2, 28, { align: 'center' });
         
-        doc.setFontSize(10);
-        let yPos = 35;
-
-        // Line 1: Department, Class Rep, KEY section
-        doc.text(`Department: ${data.department || ''}`, 15, yPos + 5);
-        doc.text(`Class Rep Name: ${data.classRepName || ''}`, pageWidth / 2, yPos + 5, { align: 'center' });
-        
-        // Redesigned KEY section for clarity, without a box
-        const keyStartX = pageWidth - 80;
-        doc.setFontSize(10).setFont('helvetica', 'bold');
-        doc.text('KEY', keyStartX, yPos + 5);
-        doc.setFontSize(8).setFont('helvetica', 'normal');
-        doc.text('T: Taught   |   NT: Not Taught   |   ASS: Assignment', keyStartX, yPos + 10);
-
-
-        // Move yPos down past the first line content
-        yPos += 15;
-
-        // Line 2: Class, Sign
-        doc.text(`Class: ${data.className || ''}`, 15, yPos);
-        doc.text(`Sign: ...............................`, pageWidth / 2, yPos, { align: 'center' });
-        yPos += 5;
-        
-        // Line 3: Tel
-        doc.text(`Tel: ................................`, pageWidth / 2, yPos, { align: 'center' });
+        // --- Information Block using autoTable for clean alignment ---
+        autoTable(doc, {
+            body: [
+                [
+                    { content: `Department: ${data.department || ''}`, styles: { halign: 'left' } },
+                    { content: `Class Rep Name: ${data.classRepName || ''}`, styles: { halign: 'right' } }
+                ],
+                [
+                    { content: `Class: ${data.className || ''}`, styles: { halign: 'left' } },
+                    { content: `Sign: ...............................`, styles: { halign: 'right' } }
+                ],
+                [
+                    { content: '' }, // Empty cell for alignment
+                    { content: `Tel: ................................`, styles: { halign: 'right' } }
+                ],
+            ],
+            startY: 40,
+            theme: 'plain',
+            styles: { fontSize: 10, font: 'helvetica', cellPadding: 1 },
+        });
 
 
-        // --- Table ---
-        yPos = 60; // Hardcoded start position for the table, giving enough space
+        // --- Main Attendance Table ---
+        let yPos = (doc as any).lastAutoTable.finalY + 5; // Dynamic start position
         const tableLeftMargin = 15;
         const tableRightMargin = 15;
         const tableWidth = pageWidth - tableLeftMargin - tableRightMargin;
@@ -211,11 +206,17 @@ export const generatePdf = async (
         const timeSlots: TimeSlot[] = ['08:00-10:00', '10:00-12:00', '12:00-13:00', '13:00-15:00', '15:00-17:00'];
         const days: Day[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
+        // Draw Table Header Background
+        doc.setFillColor(230, 230, 230); // Light grey
+        doc.rect(tableLeftMargin, yPos, tableWidth, cellHeight, 'F');
+
         // Draw Table Grid
         doc.setDrawColor(0);
-        // Outer box and horizontal lines
-        for(let i = 0; i <= timeSlots.length + 1; i++) {
-             doc.rect(tableLeftMargin, yPos + (i * cellHeight), tableWidth, cellHeight);
+        // Outer box
+        doc.rect(tableLeftMargin, yPos, tableWidth, cellHeight * (timeSlots.length + 1));
+        // Horizontal lines
+        for(let i = 1; i <= timeSlots.length; i++) {
+             doc.line(tableLeftMargin, yPos + (i * cellHeight), tableLeftMargin + tableWidth, yPos + (i * cellHeight));
         }
         // Vertical lines
         doc.line(tableLeftMargin + timeColWidth, yPos, tableLeftMargin + timeColWidth, yPos + cellHeight * (timeSlots.length + 1));
@@ -226,12 +227,13 @@ export const generatePdf = async (
 
         // Table Headers
         doc.setFontSize(9).setFont('helvetica', 'bold');
-        doc.text('DAY/TIME', tableLeftMargin + 2, yPos + cellHeight / 2 + 2);
+        doc.text('DAY/TIME', tableLeftMargin + timeColWidth / 2, yPos + cellHeight / 2, { align: 'center', baseline: 'middle' });
         days.forEach((day, i) => {
             const dayX = tableLeftMargin + timeColWidth + (i * dayColWidth);
-            doc.text(day.toUpperCase(), dayX + dayColWidth / 2, yPos + 6, { align: 'center' });
+            const cellCenter = dayX + dayColWidth / 2;
+            doc.text(day.toUpperCase(), cellCenter, yPos + 6, { align: 'center' });
             doc.setFont('helvetica', 'normal');
-            doc.text(`Date: ${data.dates[day] || ' '}`, dayX + 2, yPos + 14);
+            doc.text(`Date: ${data.dates[day] || ''}`, cellCenter, yPos + 14, { align: 'center' });
             doc.setFont('helvetica', 'bold');
         });
         
@@ -241,7 +243,7 @@ export const generatePdf = async (
         doc.setFontSize(8).setFont('helvetica', 'normal');
         timeSlots.forEach((time, rowIndex) => {
             const rowY = yPos + (rowIndex * cellHeight);
-            doc.setFont('helvetica', 'bold').text(time, tableLeftMargin + 2, rowY + cellHeight / 2 + 2);
+            doc.setFont('helvetica', 'bold').text(time, tableLeftMargin + timeColWidth / 2, rowY + cellHeight / 2, { align: 'center', baseline: 'middle' });
             doc.setFont('helvetica', 'normal');
 
             days.forEach((day, colIndex) => {
