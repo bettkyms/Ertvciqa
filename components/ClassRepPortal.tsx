@@ -1,10 +1,9 @@
 import React, { useState, useMemo, useContext } from 'react';
 import { AuthContext } from '../contexts/AuthContext';
 import { DataContext } from '../contexts/DataContext';
-import { WeeklyScheduleInput, TimeSlot, Day, SessionInput, WeeklyTrainerReportData, Unit, DaySchedule, Trainer, Class, User, TrainerSchedule, Session } from '../types';
+import { WeeklyScheduleInput, TimeSlot, Day, SessionInput, WeeklyTrainerReportData, Unit, DaySchedule, Trainer, Class, User, TrainerSchedule } from '../types';
 import { generateWeeklyScheduleSubmissionSummary } from '../services/geminiService';
 import { generatePdf } from '../services/pdfService';
-import ImageExtractor from './ImageExtractor';
 
 const timeSlots: TimeSlot[] = ['08:00-10:00', '10:00-12:00', '12:00-13:00', '13:00-15:00', '15:00-17:00'];
 const days: Day[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
@@ -13,20 +12,16 @@ const initialSchedule: WeeklyScheduleInput = {
     monday: {}, tuesday: {}, wednesday: {}, thursday: {}, friday: {}
 };
 
-type EntryMode = 'manual' | 'image';
-
 const ClassRepPortal: React.FC = () => {
   const { currentUser, logout } = useContext(AuthContext);
   const { classes, units, trainers, addTrainerSchedule, remarks, logo, unitAssignments, trainerSchedules } = useContext(DataContext);
 
-  const [entryMode, setEntryMode] = useState<EntryMode>('manual');
   const [selectedClassId, setSelectedClassId] = useState('');
   const [week, setWeek] = useState('');
   const [schedule, setSchedule] = useState<WeeklyScheduleInput>(initialSchedule);
   const [summary, setSummary] = useState('');
   const [reportData, setReportData] = useState<WeeklyTrainerReportData | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [extractionMessage, setExtractionMessage] = useState('');
   const [viewingSchedule, setViewingSchedule] = useState<TrainerSchedule | null>(null);
 
 
@@ -83,57 +78,6 @@ const ClassRepPortal: React.FC = () => {
     });
   };
   
-  const handleDataExtracted = (extractedData: WeeklyTrainerReportData) => {
-    const newSchedule: WeeklyScheduleInput = { monday: {}, tuesday: {}, wednesday: {}, thursday: {}, friday: {} };
-    const unitMapByName = new Map(unitsInClass.map(u => [u.name.toLowerCase().trim(), u.id]));
-    const trainerMapByName = new Map(trainers.map(t => [t.name.toLowerCase().trim(), t.id]));
-    let unitsMatched = 0;
-    let trainersMatched = 0;
-    let totalEntries = 0;
-
-    for (const day of days) {
-        const daySchedule = extractedData.schedule[day as Day];
-        if (!daySchedule) continue;
-
-        for (const time in daySchedule) {
-            const session = daySchedule[time as TimeSlot];
-            if (!session) continue;
-            totalEntries++;
-            
-            // The properties on the session object from the API response can be of type 'unknown'.
-            // Safely convert them to strings to avoid type errors.
-            // FIX: Explicitly and safely convert potentially unknown properties to strings before use.
-            // @ts-ignore
-            const sessionData = session as unknown as Record<string, unknown>;
-            const subject = String(sessionData.subject ?? '');
-            const trainer = String(sessionData.trainer ?? '');
-            const status = String(sessionData.status ?? '');
-
-            if (!subject || !trainer) continue;
-
-            const subjectName = subject.toLowerCase().trim();
-            const trainerName = trainer.toLowerCase().trim();
-            const unitId = unitMapByName.get(subjectName);
-            const trainerId = trainerMapByName.get(trainerName);
-
-            if (unitId) unitsMatched++;
-            if (trainerId) trainersMatched++;
-
-            if (unitId && trainerId) {
-                 if (!newSchedule[day as Day]) newSchedule[day as Day] = {};
-                 newSchedule[day as Day]![time as TimeSlot] = {
-                    unitId: unitId,
-                    trainerId: trainerId,
-                    status: (status === 'Taught' || status === 'Not Taught' || status === 'Assignment') ? status : 'Taught',
-                };
-            }
-        }
-    }
-    setSchedule(newSchedule);
-    setExtractionMessage(`Successfully populated schedule. Matched ${unitsMatched} units & ${trainersMatched} trainers out of ${totalEntries} entries. Please review.`);
-    setEntryMode('manual');
-  };
-
   const getDatesForWeek = (weekString: string): { [day: string]: string } => {
       if (!weekString || !weekString.includes('-W')) {
         const now = new Date();
@@ -219,8 +163,6 @@ const ClassRepPortal: React.FC = () => {
     setSchedule(initialSchedule);
     setReportData(null);
     setIsSubmitting(false);
-    setExtractionMessage('');
-    setEntryMode('manual');
     setViewingSchedule(null);
   }
 
@@ -320,86 +262,68 @@ const ClassRepPortal: React.FC = () => {
         
         {selectedClassId && week && (
             <div>
-                 <div className="mb-4">
-                    <div className="inline-flex bg-slate-100 p-1 rounded-lg">
-                        <button onClick={() => setEntryMode('manual')} className={`px-4 py-1.5 text-sm font-semibold rounded-md ${entryMode === 'manual' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600'}`}>
-                            Manual Entry
-                        </button>
-                        <button onClick={() => setEntryMode('image')} className={`px-4 py-1.5 text-sm font-semibold rounded-md ${entryMode === 'image' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600'}`}>
-                            Extract from Image
-                        </button>
-                    </div>
+                <div className="mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200 text-center">
+                    <p className="font-semibold text-indigo-800">
+                        Recording attendance for class <span className="font-bold">{selectedClass?.name || 'N/A'}</span>
+                    </p>
                 </div>
-
-                {entryMode === 'image' && <ImageExtractor onDataExtracted={handleDataExtracted} />}
-
-                {entryMode === 'manual' && (
-                    <>
-                    <div className="mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200 text-center">
-                        <p className="font-semibold text-indigo-800">
-                            Recording attendance for class <span className="font-bold">{selectedClass?.name || 'N/A'}</span>
-                        </p>
-                        {extractionMessage && <p className="text-sm text-green-700 mt-2">{extractionMessage}</p>}
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="min-w-full border-collapse">
-                            <thead>
-                                <tr className="bg-slate-100">
-                                    <th className="p-2 border border-slate-200 text-left text-sm font-semibold text-slate-600">Time</th>
-                                    {days.map(day => <th key={day} className="p-2 border border-slate-200 text-left text-sm font-semibold text-slate-600 capitalize">{day}</th>)}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {timeSlots.map(time => (
-                                    <tr key={time}>
-                                        <td className="p-2 border border-slate-200 font-medium text-xs text-slate-500 align-top">{time}</td>
-                                        {days.map(day => (
-                                            <td key={`${day}-${time}`} className="p-2 border border-slate-200 align-top">
-                                                <div className="space-y-2">
+                <div className="overflow-x-auto">
+                    <table className="min-w-full border-collapse">
+                        <thead>
+                            <tr className="bg-slate-100">
+                                <th className="p-2 border border-slate-200 text-left text-sm font-semibold text-slate-600">Time</th>
+                                {days.map(day => <th key={day} className="p-2 border border-slate-200 text-left text-sm font-semibold text-slate-600 capitalize">{day}</th>)}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {timeSlots.map(time => (
+                                <tr key={time}>
+                                    <td className="p-2 border border-slate-200 font-medium text-xs text-slate-500 align-top">{time}</td>
+                                    {days.map(day => (
+                                        <td key={`${day}-${time}`} className="p-2 border border-slate-200 align-top">
+                                            <div className="space-y-2">
+                                                <select
+                                                  value={schedule[day]?.[time]?.unitId || ''}
+                                                  onChange={e => handleSessionChange(day, time, 'unitId', e.target.value)}
+                                                  className="w-full text-xs p-1 border border-slate-300 rounded-md bg-white"
+                                                >
+                                                    <option value="">-- Select Unit --</option>
+                                                    {unitsInClass.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                                                </select>
+                                                {schedule[day]?.[time]?.unitId && (
+                                                    <>
                                                     <select
-                                                      value={schedule[day]?.[time]?.unitId || ''}
-                                                      onChange={e => handleSessionChange(day, time, 'unitId', e.target.value)}
+                                                        value={schedule[day]?.[time]?.trainerId || ''}
+                                                        onChange={e => handleSessionChange(day, time, 'trainerId', e.target.value)}
+                                                        className="w-full text-xs p-1 border border-slate-300 rounded-md bg-white"
+                                                    >
+                                                        <option value="">-- Select Trainer --</option>
+                                                        {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                                    </select>
+                                                    <select
+                                                      value={schedule[day]?.[time]?.status || 'Taught'}
+                                                      onChange={e => handleSessionChange(day, time, 'status', e.target.value)}
                                                       className="w-full text-xs p-1 border border-slate-300 rounded-md bg-white"
                                                     >
-                                                        <option value="">-- Select Unit --</option>
-                                                        {unitsInClass.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                                                        <option value="Taught">Taught</option>
+                                                        <option value="Not Taught">Not Taught</option>
+                                                        <option value="Assignment">Assignment</option>
                                                     </select>
-                                                    {schedule[day]?.[time]?.unitId && (
-                                                        <>
-                                                        <select
-                                                            value={schedule[day]?.[time]?.trainerId || ''}
-                                                            onChange={e => handleSessionChange(day, time, 'trainerId', e.target.value)}
-                                                            className="w-full text-xs p-1 border border-slate-300 rounded-md bg-white"
-                                                        >
-                                                            <option value="">-- Select Trainer --</option>
-                                                            {trainers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                                                        </select>
-                                                        <select
-                                                          value={schedule[day]?.[time]?.status || 'Taught'}
-                                                          onChange={e => handleSessionChange(day, time, 'status', e.target.value)}
-                                                          className="w-full text-xs p-1 border border-slate-300 rounded-md bg-white"
-                                                        >
-                                                            <option value="Taught">Taught</option>
-                                                            <option value="Not Taught">Not Taught</option>
-                                                            <option value="Assignment">Assignment</option>
-                                                        </select>
-                                                        </>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="mt-8">
-                      <button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-indigo-300">
-                        {isSubmitting ? 'Submitting...' : 'Submit Weekly Log'}
-                      </button>
-                    </div>
-                    </>
-                )}
+                                                    </>
+                                                )}
+                                            </div>
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="mt-8">
+                  <button onClick={handleSubmit} disabled={isSubmitting} className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-indigo-300">
+                    {isSubmitting ? 'Submitting...' : 'Submit Weekly Log'}
+                  </button>
+                </div>
             </div>
         )}
 
